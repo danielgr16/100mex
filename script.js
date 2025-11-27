@@ -13,6 +13,12 @@ document.addEventListener('DOMContentLoaded', () => {
         strikes: 0,
     };
 
+    const soundReveal = new Audio('sounds/reveal.mp3');
+    const soundStrike = new Audio('sounds/strike.mp3');
+    const soundQuestion = new Audio('sounds/new_question.mp3');
+    // const soundReset = new Audio('sounds/reset.mp3');
+    const soundRepeated = new Audio('sounds/repeated.mp3');
+
     const defaultQuestions = [
         { id: Date.now() + 1, text: "Algo que te pones en la cabeza", answers: [{ text: "Sombrero", points: 35 }, { text: "Gorra", points: 28 }, { text: "Casco", points: 15 }, { text: "Peluca", points: 10 }, { text: "Diadema", points: 7 }, { text: "Lentes", points: 5 }] },
         { id: Date.now() + 2, text: "Un animal que vive en la granja", answers: [{ text: "Vaca", points: 40 }, { text: "Pollo / Gallina", points: 30 }, { text: "Cerdo", points: 20 }, { text: "Caballo", points: 5 }, { text: "Oveja", points: 5 }] },
@@ -147,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Controles de ronda
         document.getElementById('incorrect-answer-btn').addEventListener('click', addStrike);
         document.getElementById('reset-round-btn').addEventListener('click', resetRound);
+        document.getElementById('repeated-btn').addEventListener('click', playRepeated);
 
         // Modal de Preguntas
         document.getElementById('add-question-btn').addEventListener('click', () => openQuestionModal());
@@ -169,6 +176,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function selectQuestion(index) {
+        soundQuestion.currentTime = 0;
+        soundQuestion.play();
         gameState.currentQuestionIndex = index;
         resetRound();
     }
@@ -176,6 +185,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function revealAnswer(answerIndex, points) {
         if (!gameState.revealedAnswers.includes(answerIndex)) {
             gameState.revealedAnswers.push(answerIndex);
+
+            soundReveal.currentTime = 0;
+            soundReveal.play();
 
             const team = prompt(`¿Qué equipo se lleva los puntos? (1 para ${gameState.team1Name}, 2 para ${gameState.team2Name})`);
             if (team === '1') gameState.team1Score += points;
@@ -187,6 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addStrike() {
+        soundStrike.currentTime = 0;
+        soundStrike.play();
+
         if (gameState.strikes < 3) {
             gameState.strikes++;
             renderControlScreen();
@@ -372,5 +387,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 strikeEl.classList.add('opacity-0');
             }
         }
+    }
+
+    function playRepeated() {
+        soundRepeated.currentTime = 0;
+        soundRepeated.play();
     }
 });
