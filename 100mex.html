@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100 Mexicanos Dijeron</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .font-anton {
+            font-family: 'Anton', sans-serif;
+        }
+        /* Estilos para la pantalla del juego */
+        .game-board-bg {
+            background: radial-gradient(circle, #1e3a8a 0%, #0c1e42 100%);
+        }
+        .answer-card {
+            background-color: #1e40af;
+            /* border: 4px solid #3b82f6; */
+            transition: all 0.4s ease-in-out;
+            transform-style: preserve-3d;
+            box-shadow: #0c1e42 0px 0px 10px;
+        }
+        .answer-card.revealed {
+            transform: rotateY(180deg);
+        }
+        .answer-card .front, .answer-card .back {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .answer-card .back {
+            transform: rotateY(180deg);
+        }
+        .answers-container {
+            background: #00000026;
+            border-radius: 30px;
+            margin: 0 25vh;
+            box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset;
+            border: blueviolet;
+        }
+        .strike-x {
+            color: #ef4444;
+            text-shadow: 0 0 10px #ef4444, 0 0 20px #ef4444;
+            transition: opacity 0.3s ease-in-out;
+        }
+        /* Estilos para el panel de control */
+        .control-panel-bg {
+             background-color: #1e293b;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Pantalla de Inicio (Selector) -->
+    <div id="home-screen" class="min-h-screen flex flex-col items-center justify-center text-center p-4">
+        <h1 class="text-6xl font-anton text-yellow-400 mb-4 tracking-wider">100 MEXICANOS DIJERON</h1>
+        <p class="text-xl text-slate-300 mb-8">Elige qué pantalla quieres abrir.</p>
+        <div class="space-y-4 md:space-y-0 md:space-x-4">
+            <button onclick="openScreen('control')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300">
+                🖥️ Abrir Panel de Control
+            </button>
+            <button onclick="openScreen('game')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300">
+                📽️ Abrir Pantalla de Juego
+            </button>
+        </div>
+        <p class="mt-8 text-sm text-slate-500">
+            Instrucciones: Abre el Panel de Control en esta pantalla y la Pantalla de Juego en una nueva pestaña o en el proyector.
+        </p>
+    </div>
+
+    <!-- Pantalla 1: Panel de Control -->
+    <div id="control-screen" class="hidden control-panel-bg">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-screen p-4">
+            <!-- Columna Izquierda: Configuración y Preguntas -->
+            <div class="lg:col-span-1 bg-slate-800 rounded-lg p-4 flex flex-col h-full">
+                <h2 class="text-2xl font-bold mb-4 border-b border-slate-600 pb-2">Configuración y Preguntas</h2>
+
+                <!-- Nombres de Equipos -->
+                <div id="config-section">
+                    <h3 class="text-lg font-semibold mb-2">Equipos</h3>
+                    <div class="space-y-2 mb-4">
+                        <input type="text" id="team1-name-input" placeholder="Nombre Equipo 1" class="w-full bg-slate-700 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="team2-name-input" placeholder="Nombre Equipo 2" class="w-full bg-slate-700 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                     <button id="update-teams-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">Actualizar Nombres</button>
+                </div>
+
+                <hr class="my-4 border-slate-600">
+
+                <!-- Lista de Preguntas -->
+                <div class="flex-grow overflow-y-auto">
+                    <h3 class="text-lg font-semibold mb-2">Lista de Preguntas</h3>
+                    <div id="questions-list" class="space-y-2">
+                        <!-- Las preguntas se insertarán aquí -->
+                    </div>
+                </div>
+
+                <!-- Botón para crear preguntas -->
+                 <button id="add-question-btn" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                    + Crear Nueva Pregunta
+                </button>
+            </div>
+
+            <!-- Columna Derecha: Control del Juego Activo -->
+            <div class="lg:col-span-2 bg-slate-900/50 rounded-lg p-4">
+                 <div id="active-game-placeholder" class="flex items-center justify-center h-full">
+                    <p class="text-slate-400 text-xl">Selecciona una pregunta de la lista para empezar.</p>
+                </div>
+                <div id="active-game-controls" class="hidden">
+                    <h2 id="active-question-title" class="text-3xl font-bold text-yellow-400 mb-4"></h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="active-answers-list">
+                        <!-- Las respuestas de la pregunta activa se insertan aquí -->
+                    </div>
+                    <hr class="my-6 border-slate-700">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Puntajes</h3>
+                            <div class="text-lg space-y-1">
+                                <p><span id="team1-score-display">Equipo 1</span>: <strong id="team1-score" class="text-green-400">0</strong></p>
+                                <p><span id="team2-score-display">Equipo 2</span>: <strong id="team2-score" class="text-green-400">0</strong></p>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Strikes</h3>
+                             <div id="strikes-display" class="flex space-x-2 text-4xl font-bold">
+                                <!-- Strikes se muestran aquí -->
+                            </div>
+                        </div>
+                        <div>
+                           <h3 class="text-lg font-semibold mb-2">Controles de Ronda</h3>
+                           <div class="flex space-x-2">
+                                <button id="incorrect-answer-btn" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Strike Incorrecto</button>
+                                <button id="reset-round-btn" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded">Reiniciar Ronda</button>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla 2: Pantalla de Juego (Proyector) -->
+    <div id="game-screen" class="hidden min-h-screen game-board-bg p-6 flex flex-col">
+        <!-- Cabecera con puntajes -->
+        <div class="flex justify-between items-center mb-4">
+            <div class="text-center bg-black/30 p-4 rounded-lg">
+                <h2 id="game-team1-name" class="text-3xl lg:text-5xl font-anton text-cyan-400 tracking-wider">EQUIPO 1</h2>
+                <p id="game-team1-score" class="text-5xl lg:text-7xl font-bold">0</p>
+            </div>
+            <div class="text-center">
+                 <h1 class="text-5xl lg:text-6xl font-anton text-yellow-400">100 MEXICANOS DIJERON</h1>
+            </div>
+            <div class="text-center bg-black/30 p-4 rounded-lg">
+                <h2 id="game-team2-name" class="text-3xl lg:text-5xl font-anton text-fuchsia-400 tracking-wider">EQUIPO 2</h2>
+                <p id="game-team2-score" class="text-5xl lg:text-7xl font-bold">0</p>
+            </div>
+        </div>
+        
+        <!-- Tablero de respuestas -->
+        <div class="answers-container flex-grow flex flex-col justify-center items-center">
+            <h3 id="game-question-title" class="text-2xl md:text-4xl font-bold text-center mb-6 p-4 bg-black/20 rounded-lg">Esperando pregunta...</h3>
+            <div class="w-full max-w-6xl grid grid-cols-2 gap-4" id="game-board">
+                <!-- Las respuestas se generan dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Strikes -->
+        <div class="flex justify-center items-center space-x-8 mt-6">
+            <div class="text-8xl font-anton strike-x opacity-0" id="strike-1">X</div>
+            <div class="text-8xl font-anton strike-x opacity-0" id="strike-2">X</div>
+            <div class="text-8xl font-anton strike-x opacity-0" id="strike-3">X</div>
+        </div>
+    </div>
+
+    <!-- Modal para Crear/Editar Pregunta -->
+    <div id="question-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <h2 id="modal-title" class="text-2xl font-bold mb-4">Crear Nueva Pregunta</h2>
+            <div class="overflow-y-auto pr-2">
+                <input type="hidden" id="question-id">
+                <div class="mb-4">
+                    <label for="question-text" class="block mb-1 font-semibold">Pregunta:</label>
+                    <input type="text" id="question-text" class="w-full bg-slate-700 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Menciona una fruta...">
+                </div>
+                <hr class="my-4 border-slate-600">
+                <h3 class="font-semibold mb-2">Respuestas (hasta 8):</h3>
+                <div id="answers-container" class="space-y-3">
+                    <!-- Contenedores para respuestas y puntos -->
+                </div>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-700 flex justify-end space-x-3">
+                 <button id="cancel-question-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded">Cancelar</button>
+                <button id="save-question-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Guardar Pregunta</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- INICIALIZACIÓN ---
+        const bc = new BroadcastChannel('100_mexicanos_dijeron_channel');
+        
+        let gameState = {
+            team1Name: 'Equipo 1',
+            team2Name: 'Equipo 2',
+            team1Score: 0,
+            team2Score: 0,
+            questions: [],
+            currentQuestionIndex: null,
+            revealedAnswers: [],
+            strikes: 0,
+        };
+
+        const defaultQuestions = [
+            { id: Date.now() + 1, text: "Algo que te pones en la cabeza", answers: [{ text: "Sombrero", points: 35 }, { text: "Gorra", points: 28 }, { text: "Casco", points: 15 }, { text: "Peluca", points: 10 }, { text: "Diadema", points: 7 }, { text: "Lentes", points: 5 }] },
+            { id: Date.now() + 2, text: "Un animal que vive en la granja", answers: [{ text: "Vaca", points: 40 }, { text: "Pollo / Gallina", points: 30 }, { text: "Cerdo", points: 20 }, { text: "Caballo", points: 5 }, { text: "Oveja", points: 5 }] },
+            { id: Date.now() + 3, text: "Menciona un sabor de helado", answers: [{ text: "Chocolate", points: 42 }, { text: "Vainilla", points: 25 }, { text: "Fresa", points: 20 }, { text: "Limón", points: 8 }, { text: "Nuez", points: 5 }] },
+        ];
+
+        // Elementos de la UI
+        const homeScreen = document.getElementById('home-screen');
+        const controlScreen = document.getElementById('control-screen');
+        const gameScreen = document.getElementById('game-screen');
+        
+        // --- LÓGICA DE ENRUTAMIENTO Y PANTALLA ---
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const screenType = urlParams.get('screen');
+
+        function openScreen(type) {
+            window.open(`${window.location.pathname}?screen=${type}`, '_blank');
+        }
+        window.openScreen = openScreen; // Hacerla global
+
+        if (screenType === 'control') {
+            homeScreen.classList.add('hidden');
+            controlScreen.classList.remove('hidden');
+            initializeControlScreen();
+        } else if (screenType === 'game') {
+            homeScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            initializeGameScreen();
+        }
+
+        // --- LÓGICA DE COMUNICACIÓN (BROADCAST CHANNEL) ---
+        
+        function broadcastState() {
+            bc.postMessage(gameState);
+        }
+
+        bc.onmessage = (event) => {
+            gameState = event.data;
+            if (screenType === 'game') {
+                renderGameScreen();
+            }
+            if (screenType === 'control') {
+                // Sincronizar si hay otro panel de control abierto
+                renderControlScreen();
+            }
+        };
+
+        // --- LÓGICA DEL PANEL DE CONTROL ---
+
+        function initializeControlScreen() {
+            loadQuestionsFromStorage();
+            renderControlScreen();
+            setupControlEvents();
+        }
+        
+        function renderControlScreen() {
+            // Renderizar nombres de equipos
+            document.getElementById('team1-name-input').value = gameState.team1Name;
+            document.getElementById('team2-name-input').value = gameState.team2Name;
+            
+            // Renderizar lista de preguntas
+            const questionsList = document.getElementById('questions-list');
+            questionsList.innerHTML = '';
+            if (gameState.questions.length === 0) {
+                 questionsList.innerHTML = '<p class="text-slate-400">No hay preguntas. ¡Crea una!</p>';
+            }
+            gameState.questions.forEach((q, index) => {
+                const isActive = gameState.currentQuestionIndex === index;
+                const questionDiv = document.createElement('div');
+                questionDiv.className = `p-2 rounded cursor-pointer flex justify-between items-center ${isActive ? 'bg-blue-600 text-white' : 'bg-slate-700 hover:bg-slate-600'}`;
+                questionDiv.innerHTML = `
+                    <span class="flex-grow">${q.text}</span>
+                    <div class="flex-shrink-0 space-x-1">
+                        <button class="edit-q-btn text-xs bg-yellow-500 hover:bg-yellow-600 text-black px-2 py-1 rounded" data-index="${index}">E</button>
+                        <button class="delete-q-btn text-xs bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded" data-index="${index}">X</button>
+                    </div>
+                `;
+                questionDiv.querySelector('.flex-grow').addEventListener('click', () => selectQuestion(index));
+                questionsList.appendChild(questionDiv);
+            });
+            
+            // Renderizar panel de juego activo
+            if (gameState.currentQuestionIndex !== null) {
+                document.getElementById('active-game-placeholder').classList.add('hidden');
+                document.getElementById('active-game-controls').classList.remove('hidden');
+                const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
+                document.getElementById('active-question-title').textContent = currentQuestion.text;
+
+                const answersList = document.getElementById('active-answers-list');
+                answersList.innerHTML = '';
+                currentQuestion.answers.forEach((ans, index) => {
+                    const isRevealed = gameState.revealedAnswers.includes(index);
+                    const answerBtn = document.createElement('button');
+                    answerBtn.className = `p-3 rounded text-left transition duration-300 ${isRevealed ? 'bg-green-700 text-white cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-600'}`;
+                    answerBtn.disabled = isRevealed;
+                    answerBtn.innerHTML = `
+                        <span class="font-bold">${ans.text}</span>
+                        <span class="text-yellow-400 float-right">${ans.points} pts</span>
+                    `;
+                    answerBtn.onclick = () => revealAnswer(index, ans.points);
+                    answersList.appendChild(answerBtn);
+                });
+                
+                // Renderizar puntajes y strikes
+                document.getElementById('team1-score-display').textContent = gameState.team1Name;
+                document.getElementById('team2-score-display').textContent = gameState.team2Name;
+                document.getElementById('team1-score').textContent = gameState.team1Score;
+                document.getElementById('team2-score').textContent = gameState.team2Score;
+                
+                const strikesDisplay = document.getElementById('strikes-display');
+                strikesDisplay.innerHTML = '';
+                for (let i = 0; i < 3; i++) {
+                    strikesDisplay.innerHTML += `<span class="${i < gameState.strikes ? 'text-red-500' : 'text-slate-600'}">X</span>`;
+                }
+
+            } else {
+                 document.getElementById('active-game-placeholder').classList.remove('hidden');
+                 document.getElementById('active-game-controls').classList.add('hidden');
+            }
+        }
+        
+        function setupControlEvents() {
+            // Nombres de equipos
+            document.getElementById('update-teams-btn').addEventListener('click', () => {
+                gameState.team1Name = document.getElementById('team1-name-input').value || 'Equipo 1';
+                gameState.team2Name = document.getElementById('team2-name-input').value || 'Equipo 2';
+                renderControlScreen();
+                broadcastState();
+            });
+
+            // Controles de ronda
+            document.getElementById('incorrect-answer-btn').addEventListener('click', addStrike);
+            document.getElementById('reset-round-btn').addEventListener('click', resetRound);
+
+            // Modal de Preguntas
+            document.getElementById('add-question-btn').addEventListener('click', () => openQuestionModal());
+            document.getElementById('cancel-question-btn').addEventListener('click', closeQuestionModal);
+            document.getElementById('save-question-btn').addEventListener('click', saveQuestion);
+            
+            // Listeners para editar y borrar preguntas (delegación de eventos)
+            document.getElementById('questions-list').addEventListener('click', (e) => {
+                if(e.target.classList.contains('edit-q-btn')) {
+                    const index = parseInt(e.target.dataset.index);
+                    openQuestionModal(gameState.questions[index], index);
+                }
+                if(e.target.classList.contains('delete-q-btn')) {
+                    if (confirm('¿Estás seguro de que quieres eliminar esta pregunta?')) {
+                        const index = parseInt(e.target.dataset.index);
+                        deleteQuestion(index);
+                    }
+                }
+            });
+        }
+
+        function selectQuestion(index) {
+            gameState.currentQuestionIndex = index;
+            resetRound();
+        }
+
+        function revealAnswer(answerIndex, points) {
+            if (!gameState.revealedAnswers.includes(answerIndex)) {
+                gameState.revealedAnswers.push(answerIndex);
+                
+                const team = prompt(`¿Qué equipo se lleva los puntos? (1 para ${gameState.team1Name}, 2 para ${gameState.team2Name})`);
+                if(team === '1') gameState.team1Score += points;
+                if(team === '2') gameState.team2Score += points;
+
+                renderControlScreen();
+                broadcastState();
+            }
+        }
+        
+        function addStrike() {
+            if (gameState.strikes < 3) {
+                gameState.strikes++;
+                renderControlScreen();
+                broadcastState();
+            }
+        }
+
+        function resetRound() {
+            gameState.revealedAnswers = [];
+            gameState.strikes = 0;
+            renderControlScreen();
+            broadcastState();
+        }
+        
+        function deleteQuestion(index) {
+            gameState.questions.splice(index, 1);
+            if (gameState.currentQuestionIndex === index) {
+                gameState.currentQuestionIndex = null;
+            } else if (gameState.currentQuestionIndex > index) {
+                gameState.currentQuestionIndex--;
+            }
+            saveQuestionsToStorage();
+            renderControlScreen();
+            broadcastState();
+        }
+        
+        // --- LÓGICA DEL MODAL DE PREGUNTAS ---
+        const questionModal = document.getElementById('question-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const questionIdInput = document.getElementById('question-id');
+        const questionTextInput = document.getElementById('question-text');
+        const answersContainer = document.getElementById('answers-container');
+        
+        function openQuestionModal(question = null, index = -1) {
+            questionIdInput.value = index; // Usamos el index como ID temporal
+            if (question) {
+                modalTitle.textContent = 'Editar Pregunta';
+                questionTextInput.value = question.text;
+                answersContainer.innerHTML = '';
+                question.answers.forEach((ans, i) => addAnswerInput(ans.text, ans.points));
+            } else {
+                modalTitle.textContent = 'Crear Nueva Pregunta';
+                questionTextInput.value = '';
+                answersContainer.innerHTML = '';
+                for (let i = 0; i < 5; i++) addAnswerInput(); // Empezar con 5 campos
+            }
+            // Añadir campo extra vacío si es necesario
+            addAnswerInput(); 
+            questionModal.classList.remove('hidden');
+        }
+
+        function addAnswerInput(text = '', points = '') {
+             if (answersContainer.children.length >= 8) return;
+             const div = document.createElement('div');
+             div.className = 'flex items-center space-x-2';
+             div.innerHTML = `
+                <input type="text" class="w-2/3 bg-slate-700 rounded p-2 answer-text" placeholder="Respuesta">
+                <input type="number" class="w-1/3 bg-slate-700 rounded p-2 answer-points" placeholder="Puntos">
+             `;
+             div.querySelector('.answer-text').value = text;
+             div.querySelector('.answer-points').value = points;
+             answersContainer.appendChild(div);
+
+             // Si se escribe en el último, añadir uno nuevo
+             div.querySelector('.answer-text').addEventListener('input', () => {
+                if (div === answersContainer.lastElementChild) {
+                    addAnswerInput();
+                }
+             });
+        }
+        
+        function closeQuestionModal() {
+            questionModal.classList.add('hidden');
+        }
+
+        function saveQuestion() {
+            const id = questionIdInput.value;
+            const text = questionTextInput.value.trim();
+            if (!text) {
+                alert('La pregunta no puede estar vacía.');
+                return;
+            }
+            const answers = [];
+            const answerInputs = answersContainer.querySelectorAll('.flex');
+            answerInputs.forEach(div => {
+                const answerText = div.querySelector('.answer-text').value.trim();
+                const answerPoints = parseInt(div.querySelector('.answer-points').value, 10);
+                if (answerText && !isNaN(answerPoints) && answerPoints > 0) {
+                    answers.push({ text: answerText, points: answerPoints });
+                }
+            });
+
+            if (answers.length === 0) {
+                alert('Debes añadir al menos una respuesta válida con puntos.');
+                return;
+            }
+            
+            // Ordenar respuestas de mayor a menor puntaje
+            answers.sort((a, b) => b.points - a.points);
+
+            const newQuestion = { id: Date.now(), text, answers };
+            
+            if (id && id !== '-1') {
+                gameState.questions[parseInt(id)] = newQuestion;
+            } else {
+                gameState.questions.push(newQuestion);
+            }
+
+            saveQuestionsToStorage();
+            renderControlScreen();
+            broadcastState();
+            closeQuestionModal();
+        }
+        
+        // --- LÓGICA DE ALMACENAMIENTO (LOCALSTORAGE) ---
+        
+        function saveQuestionsToStorage() {
+            localStorage.setItem('100mexicanos_questions', JSON.stringify(gameState.questions));
+        }
+
+        function loadQuestionsFromStorage() {
+            const savedQuestions = localStorage.getItem('100mexicanos_questions');
+            if (savedQuestions) {
+                gameState.questions = JSON.parse(savedQuestions);
+            } else {
+                // Cargar preguntas por defecto si no hay guardadas
+                gameState.questions = defaultQuestions;
+                saveQuestionsToStorage();
+            }
+        }
+
+        // --- LÓGICA DE LA PANTALLA DE JUEGO ---
+
+        function initializeGameScreen() {
+             // Solicitar estado inicial al panel de control
+            bc.postMessage('request_state');
+            renderGameScreen();
+        }
+
+        function renderGameScreen() {
+            // Nombres y puntajes
+            document.getElementById('game-team1-name').textContent = gameState.team1Name;
+            document.getElementById('game-team2-name').textContent = gameState.team2Name;
+            document.getElementById('game-team1-score').textContent = gameState.team1Score;
+            document.getElementById('game-team2-score').textContent = gameState.team2Score;
+            
+            const gameBoard = document.getElementById('game-board');
+            if (gameState.currentQuestionIndex !== null) {
+                const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
+                document.getElementById('game-question-title').textContent = currentQuestion.text;
+                
+                gameBoard.innerHTML = '';
+                currentQuestion.answers.forEach((ans, index) => {
+                    const isRevealed = gameState.revealedAnswers.includes(index);
+                    const answerDiv = document.createElement('div');
+                    answerDiv.className = 'relative h-24 perspective-1000';
+                    answerDiv.innerHTML = `
+                        <div class="answer-card absolute w-full h-full ${isRevealed ? 'revealed' : ''}">
+                            <!-- Frente (Oculto) -->
+                            <div class="front absolute w-full h-full flex items-center justify-center p-2 rounded-lg text-4xl font-bold bg-blue-800 border-4 border-blue-400">
+                                ${index + 1}
+                            </div>
+                            <!-- Dorso (Revelado) -->
+                            <div class="back absolute w-full h-full flex items-center justify-between p-4 rounded-lg bg-yellow-400 text-slate-900 border-4 border-yellow-200">
+                                <span class="text-xl lg:text-2xl font-semibold">${ans.text}</span>
+                                <span class="text-2xl lg:text-3xl font-bold">${ans.points}</span>
+                            </div>
+                        </div>
+                    `;
+                    gameBoard.appendChild(answerDiv);
+                });
+            } else {
+                document.getElementById('game-question-title').textContent = 'Esperando pregunta...';
+                gameBoard.innerHTML = '<p class="col-span-2 text-center text-slate-400">El tablero aparecerá aquí</p>';
+            }
+            
+            // Strikes
+            for (let i = 1; i <= 3; i++) {
+                const strikeEl = document.getElementById(`strike-${i}`);
+                if (i <= gameState.strikes) {
+                    strikeEl.classList.remove('opacity-0');
+                } else {
+                    strikeEl.classList.add('opacity-0');
+                }
+            }
+        }
+    });
+    </script>
+</body>
+</html>
