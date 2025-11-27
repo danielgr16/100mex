@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const soundReveal = new Audio('sounds/reveal.mp3');
     const soundStrike = new Audio('sounds/strike.mp3');
     const soundQuestion = new Audio('sounds/new_question.mp3');
-    // const soundReset = new Audio('sounds/reset.mp3');
     const soundRepeated = new Audio('sounds/repeated.mp3');
+    // const soundReset = new Audio('sounds/reset.mp3');
 
     const defaultQuestions = [
         { id: Date.now() + 1, text: "Algo que te pones en la cabeza", answers: [{ text: "Sombrero", points: 35 }, { text: "Gorra", points: 28 }, { text: "Casco", points: 15 }, { text: "Peluca", points: 10 }, { text: "Diadema", points: 7 }, { text: "Lentes", points: 5 }] },
@@ -61,6 +61,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const homeScreen = document.getElementById('home-screen');
     const controlScreen = document.getElementById('control-screen');
     const gameScreen = document.getElementById('game-screen');
+
+    let lastSeenStrikes = 0;
 
     // --- LÓGICA DE ENRUTAMIENTO Y PANTALLA ---
 
@@ -183,7 +185,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // Controles de ronda
-        document.getElementById('incorrect-answer-btn').addEventListener('click', addStrike);
+        document.getElementById('incorrect-answer-btn').addEventListener('click', () => {
+            if (gameState.strikes < 3) {
+                gameState.strikes++;
+
+                soundStrike.currentTime = 0;
+                soundStrike.play();
+
+                broadcastState();
+            }
+        });
+
         document.getElementById('reset-round-btn').addEventListener('click', resetRound);
         document.getElementById('repeated-btn').addEventListener('click', playRepeated);
 
@@ -230,20 +242,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    function addStrike() {
-        soundStrike.currentTime = 0;
-        soundStrike.play();
+    // function addStrike() {
+    //     soundStrike.currentTime = 0;
+    //     soundStrike.play();
 
-        if (gameState.strikes < 3) {
-            gameState.strikes++;
-            renderControlScreen();
-            broadcastState();
-        }
-    }
+    //     if (gameState.strikes < 3) {
+    //         gameState.strikes++;
+    //         renderControlScreen();
+    //         broadcastState();
+    //     }
+    // }
 
     function resetRound() {
         gameState.revealedAnswers = [];
         gameState.strikes = 0;
+        lastSeenStrikes = 0;
         renderControlScreen();
         broadcastState();
     }
@@ -381,6 +394,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('game-team1-score').textContent = gameState.team1Score;
         document.getElementById('game-team2-score').textContent = gameState.team2Score;
 
+        // Actualizar strikes pequeños
+        for (let i = 1; i <= 3; i++) {
+            const strike = document.getElementById(`strike-${i}`);
+            if (i <= gameState.strikes) {
+                strike.classList.remove('opacity-0');
+                strike.classList.add('opacity-100');
+            } else {
+                strike.classList.remove('opacity-100');
+                strike.classList.add('opacity-0');
+            }
+        }
+
+        // Mostramos la X gigante SOLO si los strikes aumentaron desde la última vez que vimos el estado
+        if (gameState.strikes > lastSeenStrikes) {
+            showBigStrike();
+        }
+
+        // Actualizamos el lastSeenStrikes para la próxima render
+        lastSeenStrikes = gameState.strikes;
+
         const gameBoard = document.getElementById('game-board');
         if (gameState.currentQuestionIndex !== null) {
             const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
@@ -426,4 +459,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         soundRepeated.currentTime = 0;
         soundRepeated.play();
     }
+
+    function showBigStrike() {
+        const bigStrike = document.getElementById('big-strike');
+        if (!bigStrike) return;
+
+        // Mostrar overlay gigante
+        bigStrike.classList.remove('opacity-0');
+        bigStrike.classList.add('opacity-100');
+
+        // Agregar clase shake al contenedor principal del juego
+        const gameScreenEl = document.getElementById('game-screen');
+        if (gameScreenEl) {
+            gameScreenEl.classList.add('shake-screen');
+        }
+
+        // Duraciones: shake 400ms, X visible 1500-3000ms (ajusta si quieres)
+        setTimeout(() => {
+            // quitar shake
+            if (gameScreenEl) gameScreenEl.classList.remove('shake-screen');
+        }, 400);
+
+        // ocultar la X gigante después de 1.5s (o 3s si prefieres más drama)
+        setTimeout(() => {
+            bigStrike.classList.remove('opacity-100');
+            bigStrike.classList.add('opacity-0');
+        }, 1500);
+    }
+
+
 });
