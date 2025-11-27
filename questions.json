@@ -1,0 +1,112 @@
+[
+  {
+    "id": 101,
+    "text": "Algo que hacen los jóvenes antes de empezar el servicio",
+    "answers": [
+      { "text": "Tomarse fotos", "points": 34 },
+      { "text": "Saludar a todos", "points": 26 },
+      { "text": "Ensayar canciones", "points": 18 },
+      { "text": "Orar", "points": 12 },
+      { "text": "Chismear", "points": 10 }
+    ]
+  },
+  {
+    "id": 102,
+    "text": "Algo que no puede faltar en un grupo de jóvenes cristianos",
+    "answers": [
+      { "text": "Música", "points": 32 },
+      { "text": "Biblia", "points": 24 },
+      { "text": "Dinámicas", "points": 20 },
+      { "text": "Cafecito", "points": 14 },
+      { "text": "Juegos", "points": 10 }
+    ]
+  },
+  {
+    "id": 103,
+    "text": "Algo que hacen los jóvenes durante la alabanza",
+    "answers": [
+      { "text": "Cantar fuerte", "points": 38 },
+      { "text": "Levantar manos", "points": 22 },
+      { "text": "Grabar historias", "points": 16 },
+      { "text": "Llorar", "points": 14 },
+      { "text": "Saltar", "points": 10 }
+    ]
+  },
+  {
+    "id": 104,
+    "text": "Una excusa típica para no ir a reunión de jóvenes",
+    "answers": [
+      { "text": "Tengo tarea", "points": 36 },
+      { "text": "Estoy cansado", "points": 28 },
+      { "text": "Tengo sueño", "points": 16 },
+      { "text": "Tengo que trabajar", "points": 12 },
+      { "text": "No me avisaron", "points": 8 }
+    ]
+  },
+  {
+    "id": 105,
+    "text": "Algo que se predica seguido a los jóvenes",
+    "answers": [
+      { "text": "Identidad en Cristo", "points": 30 },
+      { "text": "Pureza", "points": 26 },
+      { "text": "Propósito", "points": 20 },
+      { "text": "Disciplina", "points": 14 },
+      { "text": "Obediencia", "points": 10 }
+    ]
+  },
+  {
+    "id": 106,
+    "text": "Algo que hacen cuando hay convivio",
+    "answers": [
+      { "text": "Comer pizza", "points": 40 },
+      { "text": "Tomar refresco", "points": 22 },
+      { "text": "Tomarse fotos", "points": 18 },
+      { "text": "Jugar", "points": 12 },
+      { "text": "Orar", "points": 8 }
+    ]
+  },
+  {
+    "id": 107,
+    "text": "Algo que llevan los jóvenes a la iglesia",
+    "answers": [
+      { "text": "Celular", "points": 42 },
+      { "text": "Biblia", "points": 22 },
+      { "text": "Mochila", "points": 16 },
+      { "text": "Libreta", "points": 12 },
+      { "text": "Instrumentos", "points": 8 }
+    ]
+  },
+  {
+    "id": 108,
+    "text": "Algo que distrae a los jóvenes en la prédica",
+    "answers": [
+      { "text": "Celular", "points": 46 },
+      { "text": "Sueño", "points": 24 },
+      { "text": "Amigos", "points": 14 },
+      { "text": "Pensamientos", "points": 10 },
+      { "text": "Hambre", "points": 6 }
+    ]
+  },
+  {
+    "id": 109,
+    "text": "Algo que motiva a los jóvenes a seguir yendo",
+    "answers": [
+      { "text": "Amistades", "points": 32 },
+      { "text": "La presencia de Dios", "points": 28 },
+      { "text": "Música", "points": 20 },
+      { "text": "El ambiente", "points": 12 },
+      { "text": "Apoyo del grupo", "points": 8 }
+    ]
+  },
+  {
+    "id": 110,
+    "text": "Algo que pasa cuando dicen: Vamos a hacer una actividad",
+    "answers": [
+      { "text": "Todos gritan", "points": 34 },
+      { "text": "Se emocionan", "points": 26 },
+      { "text": "Se quejan", "points": 16 },
+      { "text": "Algunos se esconden", "points": 14 },
+      { "text": "Se ponen nerviosos", "points": 10 }
+    ]
+  }
+]

@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // --- INICIALIZACIÓN ---
     const bc = new BroadcastChannel('100_mexicanos_dijeron_channel');
 
@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
         strikes: 0,
     };
 
+    // Cargar preguntas desde archivo JSON
+    await loadQuestions();
+
     const soundReveal = new Audio('sounds/reveal.mp3');
     const soundStrike = new Audio('sounds/strike.mp3');
     const soundQuestion = new Audio('sounds/new_question.mp3');
@@ -24,6 +27,35 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: Date.now() + 2, text: "Un animal que vive en la granja", answers: [{ text: "Vaca", points: 40 }, { text: "Pollo / Gallina", points: 30 }, { text: "Cerdo", points: 20 }, { text: "Caballo", points: 5 }, { text: "Oveja", points: 5 }] },
         { id: Date.now() + 3, text: "Menciona un sabor de helado", answers: [{ text: "Chocolate", points: 42 }, { text: "Vainilla", points: 25 }, { text: "Fresa", points: 20 }, { text: "Limón", points: 8 }, { text: "Nuez", points: 5 }] },
     ];
+
+    async function loadQuestions() {
+        try {
+            console.log("Cargando preguntas desde archivo JSON...");
+            const response = await fetch('questions.json');
+            const data = await response.json();
+
+            gameState.questions = data;
+            console.log("Preguntas cargadas desde JSON:", gameState.questions);
+
+            // Guardarlas en localStorage solo si no hay nada aún
+            if (!localStorage.getItem('100mexicanos_questions')) {
+                saveQuestionsToStorage();
+            }
+
+        } catch (error) {
+            console.error("Error cargando questions.json, usando respaldo local o default:", error);
+
+            const savedQuestions = localStorage.getItem('100mexicanos_questions');
+            if (savedQuestions) {
+                gameState.questions = JSON.parse(savedQuestions);
+            } else {
+                gameState.questions = defaultQuestions;
+                saveQuestionsToStorage();
+            }
+        }
+    }
+
+
 
     // Elementos de la UI
     const homeScreen = document.getElementById('home-screen');
@@ -324,14 +356,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadQuestionsFromStorage() {
         const savedQuestions = localStorage.getItem('100mexicanos_questions');
+
         if (savedQuestions) {
             gameState.questions = JSON.parse(savedQuestions);
+            console.log("Cargado desde localStorage");
         } else {
-            // Cargar preguntas por defecto si no hay guardadas
-            gameState.questions = defaultQuestions;
-            saveQuestionsToStorage();
+            console.log("No hay localStorage, se usarán las del JSON");
         }
     }
+
 
     // --- LÓGICA DE LA PANTALLA DE JUEGO ---
 
