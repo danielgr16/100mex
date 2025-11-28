@@ -12,6 +12,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         revealedAnswers: [],
         strikes: 0,
         currentQuestionPoints: 0,
+        currentTeam: 1,
+        multiplier: 1,          // x1, x2, x3
+        robOpportunity: false,  // Si el otro equipo puede robar
+        robTeam: null,          // Quién roba
+        roundLocked: false      // Para evitar que sigan respondiendo después del robo
+
     };
 
     // Cargar preguntas desde archivo JSON
@@ -187,15 +193,58 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Controles de ronda
         document.getElementById('incorrect-answer-btn').addEventListener('click', () => {
-            if (gameState.strikes < 3) {
-                gameState.strikes++;
+            console.log('Strike incorrecto');
+            console.log('Strikes actuales:', gameState.strikes);
 
-                soundStrike.currentTime = 0;
-                soundStrike.play();
+            gameState.strikes++;
 
+            console.log('Strikes aplicado. Actuales:', gameState.strikes);
+
+            soundStrike.currentTime = 0;
+            soundStrike.play();
+
+            // Si alcanza 3 strikes, iniciar oportunidad de robo
+            if (gameState.strikes >= 3) {
+                // quien estaba respondiendo
+                const defendedTeam = gameState.roundAnsweringTeam || getCurrentTeam();
+                // quien intenta robar es el equipo contrario
+                const stealingTeam = defendedTeam === 1 ? 2 : 1;
+
+                gameState.awaitingSteal = true;
+                gameState.stealingTeam = stealingTeam;
+
+                // dejar strikes en 3 visible hasta resolver
+                gameState.strikes = 3;
+
+                // Actualizamos botones/radio para mostrar que ahora el equipo que roba tiene el turno
+                gameState.currentTeam = stealingTeam;
+                const radios = document.querySelectorAll('input[name="currentTeam"]');
+                radios.forEach(radio => {
+                    radio.checked = parseInt(radio.value) === gameState.currentTeam;
+                });
+
+                broadcastState();
+
+                // Preguntar al host si el robo fue exitoso.
+                // Aquí uso prompt/confirm porque evitas tocar HTML extra por ahora.
+                // Reemplaza por un modal propio si quieres UI mejor.
+                const teamName = getTeamName(stealingTeam);
+                const question = `El equipo "${teamName}" intenta robar. ¿Fue correcto el robo? (OK = Sí, Cancelar = No)`;
+                const ok = confirm(question);
+
+                if (ok) {
+                    // robo exitoso: se le dan los puntos acumulados multiplicados
+                    finalizeRound(stealingTeam);
+                } else {
+                    // robo fallido: puntos perdidos (nadie recibe)
+                    finalizeRound(null); // null indica que nadie se lleva los puntos
+                }
+            } else {
+                // Si no llegó a 3 strikes, simplemente actualizar estado y emitir
                 broadcastState();
             }
         });
+
 
         document.getElementById('reset-round-btn').addEventListener('click', resetRound);
         document.getElementById('repeated-btn').addEventListener('click', playRepeated);
@@ -223,51 +272,106 @@ document.addEventListener('DOMContentLoaded', async () => {
     function selectQuestion(index) {
         soundQuestion.currentTime = 0;
         soundQuestion.play();
+
+        // Inicializar datos de la ronda
         gameState.currentQuestionIndex = index;
-        resetRound();
+        gameState.revealedAnswers = [];
+        gameState.strikes = 0;
+        lastSeenStrikes = 0;
+        gameState.currentQuestionPoints = 0;
+        gameState.multiplier = gameState.multiplier || 1; // por si no existe
+        // Equipo que inicia respondiendo en esta ronda (quien tenga seleccionado el radio)
+        gameState.roundAnsweringTeam = getCurrentTeam();
+        // Contribución por equipo (para auditoría/reversion si se quisiera)
+        gameState.currentQuestionContributions = { 1: 0, 2: 0 };
+        gameState.awaitingSteal = false;
+        gameState.stealingTeam = null;
+
+        gameState.roundLocked = false;
+        gameState.multiplier = 1;
+
+
+        renderControlScreen();
+        broadcastState();
     }
+
 
     function revealAnswer(answerIndex, points) {
-        if (!gameState.revealedAnswers.includes(answerIndex)) {
-            gameState.revealedAnswers.push(answerIndex);
 
-            soundReveal.currentTime = 0;
-            soundReveal.play();
+        if (gameState.roundLocked) return;
 
-            const team = getCurrentTeam();
+        gameState.revealedAnswers.push(answerIndex);
 
-            console.log("Revelando respuesta", answerIndex, "del equipo", team);
+        // Suma los puntos a la pregunta acumulados
+        gameState.currentQuestionPoints += points;
 
-            if (team == "1") {
-                gameState.team1Score += points;
-            } else if (team == "2") {
-                gameState.team2Score += points;
+        // Revisar si ya se revelaron todas
+        const totalAnswers = gameState.questions[gameState.currentQuestionIndex].answers.length;
+        const revealed = gameState.revealedAnswers.length;
+
+        if (revealed === totalAnswers) {
+
+            const currentTeam = getCurrentTeam();
+            const total = gameState.currentQuestionPoints * gameState.multiplier;
+
+            if (currentTeam === 1) {
+                gameState.team1Score += total;
+            } else {
+                gameState.team2Score += total;
             }
-            gameState.currentQuestionPoints += points;
 
-            renderControlScreen();
-            broadcastState();
+            // Reiniciamos para siguiente ronda
+            gameState.strikes = 0;
+            gameState.currentQuestionPoints = 0;
+            gameState.robOpportunity = false;
+            gameState.robTeam = null;
+            gameState.roundLocked = true; // ya terminó esta ronda
         }
+
+        renderControlScreen();
+        broadcastState();
     }
 
-    // function addStrike() {
-    //     soundStrike.currentTime = 0;
-    //     soundStrike.play();
 
-    //     if (gameState.strikes < 3) {
-    //         gameState.strikes++;
-    //         renderControlScreen();
-    //         broadcastState();
-    //     }
-    // }
+    function addStrike() {
+        if (gameState.roundLocked) return;
+
+        gameState.strikes++;
+
+        soundStrike.currentTime = 0;
+        soundStrike.play();
+
+        // Si llegaron a 3 strikes → oportunidad de robo
+        if (gameState.strikes >= 3) {
+            const currentTeam = getCurrentTeam();
+            const otherTeam = currentTeam === 1 ? 2 : 1;
+
+            gameState.robOpportunity = true;
+            gameState.robTeam = otherTeam;
+
+            switchTeam(otherTeam);
+        }
+
+        renderControlScreen();
+        broadcastState();
+    }
+
+
 
     function resetRound() {
         gameState.revealedAnswers = [];
         gameState.strikes = 0;
         lastSeenStrikes = 0;
+        gameState.currentQuestionPoints = 0;
+        gameState.currentQuestionContributions = { 1: 0, 2: 0 };
+        gameState.roundAnsweringTeam = null;
+        gameState.awaitingSteal = false;
+        gameState.stealingTeam = null;
+        gameState.multiplier = 1; // volver a 1 por defecto
         renderControlScreen();
         broadcastState();
     }
+
 
     function deleteQuestion(index) {
         gameState.questions.splice(index, 1);
@@ -498,6 +602,87 @@ document.addEventListener('DOMContentLoaded', async () => {
     function getCurrentTeam() {
         const selected = document.querySelector('input[name="currentTeam"]:checked');
         return selected ? parseInt(selected.value) : 1;
+    }
+
+    function getTeamName(teamNumber) {
+        return teamNumber === 1 ? gameState.team1Name : gameState.team2Name;
+    }
+
+    function finalizeRound(winnerTeam) {
+        const total = gameState.currentQuestionPoints || 0;
+        const mult = gameState.multiplier || 1;
+        const awarded = Math.round(total * mult); // redondear por si acaso
+
+        if (winnerTeam === 1) {
+            gameState.team1Score += awarded;
+        } else if (winnerTeam === 2) {
+            gameState.team2Score += awarded;
+        } else {
+            // nadie recibe puntos -> quedan perdidos
+        }
+
+        // Resetear datos de la ronda
+        gameState.revealedAnswers = [];
+        gameState.strikes = 0;
+        gameState.currentQuestionPoints = 0;
+        gameState.currentQuestionContributions = { 1: 0, 2: 0 };
+        gameState.roundAnsweringTeam = null;
+        gameState.awaitingSteal = false;
+        gameState.stealingTeam = null;
+        gameState.multiplier = 1;
+
+        renderControlScreen();
+        broadcastState();
+    }
+
+    function setMultiplier(value) {
+        if (![1, 2, 3].includes(value)) return;
+        gameState.multiplier = value;
+
+        console.log(`Multiplicador activado: x${value}`);
+
+        renderControlScreen();
+        broadcastState();
+    }
+
+
+    function switchTeam(teamNumber) {
+        const radio = document.querySelector(`input[name="currentTeam"][value="${teamNumber}"]`);
+        if (radio) {
+            radio.checked = true;
+        }
+    }
+
+    function attemptRob(isCorrect) {
+
+        if (!gameState.robOpportunity) return;
+
+        const robTeam = gameState.robTeam;
+
+        if (isCorrect) {
+            // Robó con éxito
+            const total = gameState.currentQuestionPoints * gameState.multiplier;
+
+            if (robTeam === 1) {
+                gameState.team1Score += total;
+            } else {
+                gameState.team2Score += total;
+            }
+        } else {
+            // Fallaron el robo → puntos se pierden
+            console.log("Los puntos se perdieron porque no lograron robar.");
+        }
+
+        // Reset de ronda
+        gameState.currentQuestionPoints = 0;
+        gameState.strikes = 0;
+        gameState.revealedAnswers = [];
+        gameState.robOpportunity = false;
+        gameState.robTeam = null;
+        gameState.roundLocked = true; // Bloqueamos hasta nueva pregunta
+
+        renderControlScreen();
+        broadcastState();
     }
 
 });
