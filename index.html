@@ -139,7 +139,6 @@
             <div class="text-center bg-black/30 p-4 rounded-lg">
                 <h2 id="game-team1-name" class="text-3xl lg:text-5xl font-anton text-cyan-400 tracking-wider">EQUIPO 1
                 </h2>
-                <p id="game-team1-score" class="text-5xl lg:text-7xl font-bold">0</p>
             </div>
             <div class="text-center">
                 <h1 class="text-5xl lg:text-6xl font-anton text-yellow-400">100 MEXICANOS DIJERON</h1>
@@ -147,17 +146,24 @@
             <div class="text-center bg-black/30 p-4 rounded-lg">
                 <h2 id="game-team2-name" class="text-3xl lg:text-5xl font-anton text-fuchsia-400 tracking-wider">EQUIPO
                     2</h2>
-                <p id="game-team2-score" class="text-5xl lg:text-7xl font-bold">0</p>
+                </div>
             </div>
-        </div>
-
-        <!-- Tablero de respuestas -->
-        <div class="answers-container flex-grow flex flex-col justify-center items-center">
-            <h3 id="game-question-title"
-                class="text-2xl md:text-4xl font-bold text-center mb-6 p-4 bg-black/20 rounded-lg">Esperando pregunta...
-            </h3>
-            <div class="w-full max-w-6xl grid grid-cols-2 gap-4" id="game-board">
-                <!-- Las respuestas se generan dinámicamente -->
+            
+            <!-- Tablero de respuestas -->
+            <div class="flex">
+                <p id="game-team1-score" class="text-5xl lg:text-7xl font-bold">0</p>
+                
+                <!-- Tablero de respuestas -->
+                <div class="flex-grow">
+                    <div class="answers-container flex-grow flex flex-col justify-center items-center">
+                        <h3 id="game-question-title"
+                        class="text-2xl md:text-4xl font-bold text-center mb-6 p-4 bg-black/20 rounded-lg">Esperando pregunta...
+                    </h3>
+                    <div class="w-full max-w-6xl grid grid-cols-2 gap-4" id="game-board">
+                        <!-- Las respuestas se generan dinámicamente -->
+                    </div>
+                </div>
+                <p id="game-team2-score" class="text-5xl lg:text-7xl font-bold">0</p>
             </div>
         </div>
 
@@ -171,7 +177,7 @@
         <!-- STRIKE GRANDE CENTRADO -->
         <div id="big-strike"
             class="fixed inset-0 flex justify-center items-center bg-black/60 opacity-0 pointer-events-none transition-opacity duration-300 z-50">
-            <span class="font-anton text-red-600 text-[15rem] drop-shadow-[0_0_40px_red] animate-pulse">
+            <span class="big-stike-icon font-anton text-red-600 text-[15rem] drop-shadow-[0_0_30px_red] animate-pulse">
                 ❌
             </span>
         </div>
@@ -204,6 +210,23 @@
             </div>
         </div>
     </div>
+
+    <!-- Botón para abrir -->
+    <button id="openModalBtn">Abrir modal</button>
+
+    <!-- Modal para robo de puntos -->
+    <div id="stealModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2 id="stealModalTitle">Robo de puntos</h2>
+            <p id="stealModalText"></p>
+
+            <div class="modal-buttons">
+                <button id="stealSuccessBtn">✅ Sí robó</button>
+                <button id="stealFailBtn">❌ No robó</button>
+            </div>
+        </div>
+    </div>
+
 
     <script src="script.js"></script>
 </body>

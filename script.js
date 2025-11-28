@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         robOpportunity: false,  // Si el otro equipo puede robar
         robTeam: null,          // Quién roba
         roundLocked: false      // Para evitar que sigan respondiendo después del robo
-
     };
 
     // Cargar preguntas desde archivo JSON
@@ -28,6 +27,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const soundQuestion = new Audio('sounds/new_question.mp3');
     const soundRepeated = new Audio('sounds/repeated.mp3');
     // const soundReset = new Audio('sounds/reset.mp3');
+
+    let pendingStealTeam = null;
+
+    const stealModal = document.getElementById("stealModal");
+    const stealModalText = document.getElementById("stealModalText");
+    const stealSuccessBtn = document.getElementById("stealSuccessBtn");
+    const stealFailBtn = document.getElementById("stealFailBtn");
+
 
     const defaultQuestions = [
         { id: Date.now() + 1, text: "Algo que te pones en la cabeza", answers: [{ text: "Sombrero", points: 35 }, { text: "Gorra", points: 28 }, { text: "Casco", points: 15 }, { text: "Peluca", points: 10 }, { text: "Diadema", points: 7 }, { text: "Lentes", points: 5 }] },
@@ -193,6 +200,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Controles de ronda
         document.getElementById('incorrect-answer-btn').addEventListener('click', () => {
+            soundStrike.currentTime = 0;
+            soundStrike.play();
             console.log('Strike incorrecto');
             console.log('Strikes actuales:', gameState.strikes);
 
@@ -200,8 +209,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             console.log('Strikes aplicado. Actuales:', gameState.strikes);
 
-            soundStrike.currentTime = 0;
-            soundStrike.play();
 
             // Si alcanza 3 strikes, iniciar oportunidad de robo
             if (gameState.strikes >= 3) {
@@ -226,19 +233,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 broadcastState();
 
                 // Preguntar al host si el robo fue exitoso.
-                // Aquí uso prompt/confirm porque evitas tocar HTML extra por ahora.
-                // Reemplaza por un modal propio si quieres UI mejor.
                 const teamName = getTeamName(stealingTeam);
-                const question = `El equipo "${teamName}" intenta robar. ¿Fue correcto el robo? (OK = Sí, Cancelar = No)`;
-                const ok = confirm(question);
 
-                if (ok) {
-                    // robo exitoso: se le dan los puntos acumulados multiplicados
-                    finalizeRound(stealingTeam);
-                } else {
-                    // robo fallido: puntos perdidos (nadie recibe)
-                    finalizeRound(null); // null indica que nadie se lleva los puntos
-                }
+                pendingStealTeam = stealingTeam;
+
+                stealModalText.textContent = `El equipo "${teamName}" intenta robar... ¿Lo logró?`;
+
+                stealModal.classList.remove("hidden");
+
+                stealSuccessBtn.addEventListener("click", () => {
+                    stealModal.classList.add("hidden");
+
+                    finalizeRound(pendingStealTeam);
+                    pendingStealTeam = null;
+                });
+
+                stealFailBtn.addEventListener("click", () => {
+                    stealModal.classList.add("hidden");
+
+                    finalizeRound(null);
+                    pendingStealTeam = null;
+                });
+
             } else {
                 // Si no llegó a 3 strikes, simplemente actualizar estado y emitir
                 broadcastState();
@@ -685,4 +701,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         broadcastState();
     }
 
+    const modal = document.getElementById("modalOverlay");
+    const openBtn = document.getElementById("openModalBtn");
+    const closeBtn = document.getElementById("closeModalBtn");
+
+    openBtn.addEventListener("click", () => {
+        modal.classList.remove("hidden");
+    });
+
+    closeBtn.addEventListener("click", () => {
+        modal.classList.add("hidden");
+    });
+
+    // Cerrar si das click afuera
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+            modal.classList.add("hidden");
+        }
+    });
 });

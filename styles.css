@@ -75,3 +75,65 @@ body {
 .shake-screen {
     animation: screenShake 0.6s ease;
 }
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-box {
+  background: #0f172a;
+  color: white;
+  padding: 20px 25px;
+  border-radius: 12px;
+  min-width: 300px;
+  text-align: center;
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.5);
+  animation: pop 0.2s ease;
+}
+
+.modal-buttons {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.modal-buttons button {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#stealSuccessBtn {
+  background: #22c55e;
+  color: white;
+}
+
+#stealFailBtn {
+  background: #ef4444;
+  color: white;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes pop {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+
+.big-stike-icon {
+    border: 30px solid #ef4444;
+    border-radius: 2rem;
+    align-items: center;
+    height: fit-content;
+}
