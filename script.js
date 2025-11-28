@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentQuestionIndex: null,
         revealedAnswers: [],
         strikes: 0,
+        currentQuestionPoints: 0,
     };
 
     // Cargar preguntas desde archivo JSON
@@ -233,9 +234,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             soundReveal.currentTime = 0;
             soundReveal.play();
 
-            const team = prompt(`¿Qué equipo se lleva los puntos? (1 para ${gameState.team1Name}, 2 para ${gameState.team2Name})`);
-            if (team === '1') gameState.team1Score += points;
-            if (team === '2') gameState.team2Score += points;
+            const team = getCurrentTeam();
+
+            console.log("Revelando respuesta", answerIndex, "del equipo", team);
+
+            if (team == "1") {
+                gameState.team1Score += points;
+            } else if (team == "2") {
+                gameState.team2Score += points;
+            }
+            gameState.currentQuestionPoints += points;
 
             renderControlScreen();
             broadcastState();
@@ -487,5 +495,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 1500);
     }
 
+    function getCurrentTeam() {
+        const selected = document.querySelector('input[name="currentTeam"]:checked');
+        return selected ? parseInt(selected.value) : 1;
+    }
 
 });
