@@ -124,6 +124,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function renderControlScreen() {
+        console.log("Renderizando pantalla de control");
+        console.log(gameState);
         // Renderizar nombres de equipos
         document.getElementById('team1-name-input').value = gameState.team1Name;
         document.getElementById('team2-name-input').value = gameState.team2Name;
@@ -313,6 +315,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     function revealAnswer(answerIndex, points) {
+        // agregar sonido
+        soundReveal.currentTime = 0;
+        soundReveal.play();
 
         if (gameState.roundLocked) return;
 
@@ -534,6 +539,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+
+        console.log('question points:', gameState.currentQuestionPoints);
+        document.getElementById('question-points').textContent = gameState.currentQuestionPoints;
+        console.log(document.getElementById('question-points').textContent);
+
         // Mostramos la X gigante SOLO si los strikes aumentaron desde la última vez que vimos el estado
         if (gameState.strikes > lastSeenStrikes) {
             showBigStrike();
@@ -555,13 +565,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 answerDiv.innerHTML = `
                         <div class="answer-card absolute w-full h-full ${isRevealed ? 'revealed' : ''}">
                             <!-- Frente (Oculto) -->
-                            <div class="front absolute w-full h-full flex items-center justify-center p-2 rounded-lg text-4xl font-bold bg-blue-800 border-4 border-blue-400">
+                            <div class="text-5xl font-bold front absolute flex items-center justify-center p-2 answer-box">
                                 ${index + 1}
                             </div>
                             <!-- Dorso (Revelado) -->
-                            <div class="back absolute w-full h-full flex items-center justify-between p-4 rounded-lg bg-yellow-400 text-slate-900 border-4 border-yellow-200">
-                                <span class="text-xl lg:text-2xl font-semibold">${ans.text}</span>
-                                <span class="text-2xl lg:text-3xl font-bold">${ans.points}</span>
+                            <div class="back absolute flex items-center justify-between p-2 pl-4 answer-box">
+                                <span class="font-semibold answer-text leading-tight">${ans.text}</span>
+                                <span class="font-bold answer-points">${ans.points}</span>
                             </div>
                         </div>
                     `;

@@ -6,8 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>100 Mexicanos Dijeron</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700&display=swap"
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&display=swap"
         rel="stylesheet">
+
+
     <link href="styles.css" rel="stylesheet">
     <style>
 
@@ -89,8 +93,8 @@
                         <div>
                             <h3 class="text-lg font-semibold mb-2">Puntajes</h3>
                             <div class="text-lg space-y-1">
-                                <p><span id="team1-score-display">Equipo 1</span>: <strong id="team1-score"
-                                        class="text-green-400">0</strong></p>
+                                <p class="text-box"><span id="team1-score-display">Equipo 1</span>: <strong
+                                        id="team1-score" class="text-green-400">0</strong></p>
                                 <p><span id="team2-score-display">Equipo 2</span>: <strong id="team2-score"
                                         class="text-green-400">0</strong></p>
                             </div>
@@ -133,38 +137,47 @@
     </div>
 
     <!-- Pantalla 2: Pantalla de Juego (Proyector) -->
-    <div id="game-screen" class="hidden min-h-screen game-board-bg p-6 flex flex-col">
+    <div id="game-screen" class="hidden min-h-screen game-board-bg p-6 flex flex-col shadow-100">
         <!-- Cabecera con puntajes -->
         <div class="flex justify-between items-center mb-4">
-            <div class="text-center bg-black/30 p-4 rounded-lg">
-                <h2 id="game-team1-name" class="text-3xl lg:text-5xl font-anton text-cyan-400 tracking-wider">EQUIPO 1
+            <div class="text-center p-4 text-box">
+                <h2 id="game-team1-name" class="text-3xl lg:text-5xl tracking-wider italic font-bold">EQUIPO 1
                 </h2>
             </div>
-            <div class="text-center">
-                <h1 class="text-5xl lg:text-6xl font-anton text-yellow-400">100 MEXICANOS DIJERON</h1>
+            <div id="game_title" class="text-center">
+                <!-- <h1 class="text-1xl lg:text-6xl font-anton text-yellow-400">100 MEXICANOS DIJERON</h1> -->
             </div>
-            <div class="text-center bg-black/30 p-4 rounded-lg">
-                <h2 id="game-team2-name" class="text-3xl lg:text-5xl font-anton text-fuchsia-400 tracking-wider">EQUIPO
+            <div class="text-center p-4 text-box">
+                <h2 id="game-team2-name" class="text-3xl lg:text-5xl tracking-wider italic font-bold">EQUIPO
                     2</h2>
+            </div>
+        </div>
+
+        <h3 id="game-question-title" class="text-3xl md:text-4xl font-bold text-center mb-6 p-4 text-shadow-lg">
+            Esperando
+            pregunta...
+        </h3>
+        <!-- Tablero de respuestas -->
+        <div class="flex items-center w-auto mx-auto gap-6">
+            <div class="text-box team-points align-center shadow-100">
+                <p id="game-team1-score" class="text-5xl lg:text-7xl font-bold">0</p>
+            </div>
+            <!-- Tablero de respuestas -->
+            <div class="flex flex-col justify-center items-center game-board-container">
+                <div class="answers-container flex-grow flex flex-col justify-center items-center">
+                </div>
+
+                <div class="w-full grid grid-rows-3 grid-cols-2 grid-flow-col gap-4 answers-container" id="game-board">
+                    <!-- Las respuestas se generan dinámica\mente -->
                 </div>
             </div>
-            
-            <!-- Tablero de respuestas -->
-            <div class="flex">
-                <p id="game-team1-score" class="text-5xl lg:text-7xl font-bold">0</p>
-                
-                <!-- Tablero de respuestas -->
-                <div class="flex-grow">
-                    <div class="answers-container flex-grow flex flex-col justify-center items-center">
-                        <h3 id="game-question-title"
-                        class="text-2xl md:text-4xl font-bold text-center mb-6 p-4 bg-black/20 rounded-lg">Esperando pregunta...
-                    </h3>
-                    <div class="w-full max-w-6xl grid grid-cols-2 gap-4" id="game-board">
-                        <!-- Las respuestas se generan dinámicamente -->
-                    </div>
-                </div>
+            <div class="text-box team-points align-center shadow-100">
                 <p id="game-team2-score" class="text-5xl lg:text-7xl font-bold">0</p>
             </div>
+        </div>
+
+        <div class="text-box team-points align-center mx-auto mt-6 shadow-100">
+            <p id="question-points" class="text-5xl lg:text-7xl font-bold">0</p>
         </div>
 
         <!-- Strikes -->
@@ -210,9 +223,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Botón para abrir -->
-    <button id="openModalBtn">Abrir modal</button>
 
     <!-- Modal para robo de puntos -->
     <div id="stealModal" class="modal-overlay hidden">
